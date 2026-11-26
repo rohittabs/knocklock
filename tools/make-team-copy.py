@@ -42,7 +42,14 @@ about = about.replace('Save <code>index.html</code> and it works', 'This one fil
 # print absolute links, so it prints a placeholder that is swapped for the relative link afterwards.
 OPEN_PLACEHOLDER = 'https://open.knocklock.invalid/'
 about_pdf = about.replace('href="./"', f'href="{OPEN_PLACEHOLDER}"')
-about_pdf = about_pdf.replace('Or open <b>KnockLock.html</b> in any web browser.', 'Keep this PDF in the same folder as <b>KnockLock.html</b>, or open KnockLock.html in any web browser.')
+# Two PDFs: the one sent on its own carries KnockLock.html inside it, and "Open KnockLock" opens
+# that attached copy (PDF apps block links to other files on the computer). The one kept inside
+# KnockLock.html has no button, since the app is already open.
+about_pdf_inner = re.sub(r'\s*<div class="cta print-only">.*?</div>', '', about_pdf, flags=re.S)
+about_pdf_inner = about_pdf_inner.replace(f'<a class="primary" href="{OPEN_PLACEHOLDER}">Open KnockLock</a>', '')
+about_pdf_inner = about_pdf_inner.replace('Or open <b>KnockLock.html</b> in any web browser.', 'Open <b>KnockLock.html</b> in any web browser.')
+about_pdf = about_pdf.replace('Or open <b>KnockLock.html</b> in any web browser. It works with no internet connection.', 'KnockLock.html is attached inside this PDF: click <b>Open KnockLock</b>, or open it from your PDF app\'s attachments. It opens in your web browser and works with no internet connection.')
+about_pdf = about_pdf.replace('<div class="cta print-only"><a class="primary" href="' + OPEN_PLACEHOLDER + '">Open KnockLock</a></div>', '<div class="cta print-only"><a class="primary" href="' + OPEN_PLACEHOLDER + '">Open KnockLock</a></div><p class="print-only" style="font-size:14px;color:#5b6472">KnockLock.html is attached inside this PDF.</p>')
 # Inside the file, "Open KnockLock" closes the About panel instead of going to the website
 about = about.replace('href="./"', 'href="#" data-close')
 about = sub_once(r'(<a class="open" href="#" data-close>)', r'<a class="open pdf" href="#" data-pdf>Download PDF</a>\1', about)
@@ -56,28 +63,30 @@ about = about.replace('</body>', '''<script>
 assert 'github' not in about.lower() and 'assets/' not in about, 'About page still has outside links'
 
 # ---- the About page as a PDF ----
+from pypdf import PdfReader, PdfWriter
+from pypdf.generic import ArrayObject, DecodedStreamObject, DictionaryObject, FloatObject, NameObject, NumberObject, TextStringObject
+
 dist = root / 'dist'
 dist.mkdir(exist_ok=True)
-(dist / 'about.html').write_text(about_pdf)
-pdf = dist / 'About-KnockLock.pdf'
-subprocess.run(['node', str(root / 'tools' / 'make-about-pdf.mjs'), str(dist / 'about.html'), str(pdf)], check=True, cwd=root)
 
-from pypdf import PdfReader, PdfWriter
-from pypdf.generic import NameObject, TextStringObject
-writer = PdfWriter(clone_from=PdfReader(pdf))
-links = 0
-for page in writer.pages:
-    for annot in page.get('/Annots') or []:
-        action = annot.get_object().get('/A')
-        if action is not None and action.get_object().get('/URI') == OPEN_PLACEHOLDER:
-            action.get_object()[NameObject('/URI')] = TextStringObject('KnockLock.html')
-            links += 1
-writer.add_metadata({'/Title': 'About KnockLock', '/Author': 'Rohit Mishra'})
-with open(pdf, 'wb') as fh:
-    writer.write(fh)
-assert links >= 2, 'Open KnockLock links not found in the PDF'
-assert b'github' not in pdf.read_bytes().lower(), 'the PDF still mentions GitHub'
-pdf_b64 = base64.b64encode(pdf.read_bytes()).decode()
+
+def print_pdf(html, out):
+    (dist / 'about.html').write_text(html)
+    subprocess.run(['node', str(root / 'tools' / 'make-about-pdf.mjs'), str(dist / 'about.html'), str(out)], check=True, cwd=root)
+    (dist / 'about.html').unlink()
+    return PdfWriter(clone_from=PdfReader(out))
+
+
+def finish(writer, out):
+    writer.add_metadata({'/Title': 'About KnockLock', '/Author': 'Rohit Mishra'})
+    with open(out, 'wb') as fh:
+        writer.write(fh)
+    assert b'github' not in out.read_bytes().lower(), 'the PDF still mentions GitHub'
+
+
+inner_pdf = dist / 'about-inner.pdf'
+finish(print_pdf(about_pdf_inner, inner_pdf), inner_pdf)
+pdf_b64 = base64.b64encode(inner_pdf.read_bytes()).decode()
 
 # ---- the app ----
 app = (root / 'index.html').read_text()
@@ -121,5 +130,49 @@ app = sub_once(r'</body>', lambda m: panel, app)
 
 out = dist / 'KnockLock.html'
 out.write_text(app)
+
+# ---- the About PDF to send on its own, with KnockLock.html attached ----
+pdf = dist / 'About-KnockLock.pdf'
+writer = print_pdf(about_pdf, pdf)
+html_bytes = out.read_bytes()
+ef = DecodedStreamObject()
+ef.set_data(html_bytes)
+ef = ef.flate_encode()
+ef.update({NameObject('/Type'): NameObject('/EmbeddedFile'), NameObject('/Subtype'): NameObject('/text#2Fhtml'),
+           NameObject('/Params'): DictionaryObject({NameObject('/Size'): NumberObject(len(html_bytes))})})
+filespec = writer._add_object(DictionaryObject({
+    NameObject('/Type'): NameObject('/Filespec'), NameObject('/F'): TextStringObject('KnockLock.html'),
+    NameObject('/UF'): TextStringObject('KnockLock.html'), NameObject('/Desc'): TextStringObject('KnockLock, the app. Opens in your web browser.'),
+    NameObject('/EF'): DictionaryObject({NameObject('/F'): writer._add_object(ef), NameObject('/UF'): writer._add_object(ef)}),
+}))
+names = writer._root_object.setdefault(NameObject('/Names'), DictionaryObject())
+names[NameObject('/EmbeddedFiles')] = DictionaryObject({NameObject('/Names'): ArrayObject([TextStringObject('KnockLock.html'), filespec])})
+buttons = 0
+for page in writer.pages:
+    annots = page.get('/Annots') or ArrayObject()
+    keep = ArrayObject()
+    for ref in annots:
+        annot = ref.get_object()
+        action = annot.get('/A')
+        if action is not None and action.get_object().get('/URI') == OPEN_PLACEHOLDER:
+            # The button opens the attached KnockLock.html. The button itself is drawn on the page, so the
+            # attachment's own icon is an empty picture over it.
+            ap = DecodedStreamObject()
+            ap.set_data(b'')
+            ap.update({NameObject('/Type'): NameObject('/XObject'), NameObject('/Subtype'): NameObject('/Form'),
+                       NameObject('/BBox'): ArrayObject([FloatObject(0), FloatObject(0), FloatObject(1), FloatObject(1)])})
+            keep.append(writer._add_object(DictionaryObject({
+                NameObject('/Type'): NameObject('/Annot'), NameObject('/Subtype'): NameObject('/FileAttachment'),
+                NameObject('/Rect'): annot['/Rect'], NameObject('/FS'): filespec, NameObject('/Name'): NameObject('/Paperclip'),
+                NameObject('/Contents'): TextStringObject('Open KnockLock'), NameObject('/T'): TextStringObject('KnockLock'),
+                NameObject('/F'): NumberObject(4), NameObject('/AP'): DictionaryObject({NameObject('/N'): writer._add_object(ap)}),
+            })))
+            buttons += 1
+        else:
+            keep.append(ref)
+    if '/Annots' in page:
+        page[NameObject('/Annots')] = keep
+assert buttons >= 2, 'Open KnockLock buttons not found in the PDF'
+finish(writer, pdf)
 visible = re.sub(r'/\*.*?\*/', '', app, flags=re.S)  # library licence comments keep their credits
-print(out.relative_to(root), len(app), 'bytes;', 'github links left outside licence notices:', len(re.findall(r'https?://[^"\'\s]*github', visible)))
+print(out.relative_to(root), len(app), 'bytes;', pdf.relative_to(root), pdf.stat().st_size, 'bytes;', 'github links left outside licence notices:', len(re.findall(r'https?://[^"\'\s]*github', visible)))
