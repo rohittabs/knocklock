@@ -36,10 +36,13 @@ about = (root / 'about.html').read_text()
 about = re.sub(r'<meta (?:property="og|name="twitter)[^>]*>\n', '', about)
 about = re.sub(r'<link rel="(?:icon|apple-touch-icon)"[^>]*>\n', '', about)
 about = re.sub(r'(src="|url\()(assets/[^")\s]+)', lambda m: m.group(1) + data_uri(m.group(2)), about)
-# "Open KnockLock" closes the About panel instead of going to the website
-about = about.replace('href="./"', 'href="#" data-close')
 about = sub_once(r'\s*<a class="ghost" href="https://github.com/[^"]*">[^<]*</a>', '', about)
 about = about.replace('Save <code>index.html</code> and it works', 'This one file works')
+# In the PDF, "Open KnockLock" opens the website (a PDF cannot open a file next to it everywhere),
+# and the last page also says to open KnockLock.html.
+about_pdf = about.replace('href="./"', 'href="https://rohittabs.github.io/knocklock/"')
+# Inside the file, "Open KnockLock" closes the About panel instead of going to the website
+about = about.replace('href="./"', 'href="#" data-close')
 about = sub_once(r'(<a class="open" href="#" data-close>)', r'<a class="open pdf" href="#" data-pdf>Download PDF</a>\1', about)
 about = about.replace('</style>', '.bar .open.pdf{background:transparent;color:var(--acc);border:1px solid var(--acc)}.bar .pdf+.open{margin-left:0}\n</style>', 1)
 about = about.replace('</body>', '''<script>
@@ -53,7 +56,7 @@ assert 'github' not in about.lower() and 'assets/' not in about, 'About page sti
 # ---- the About page as a PDF ----
 dist = root / 'dist'
 dist.mkdir(exist_ok=True)
-(dist / 'about.html').write_text(about)
+(dist / 'about.html').write_text(about_pdf)
 pdf = dist / 'About-KnockLock.pdf'
 subprocess.run(['node', str(root / 'tools' / 'make-about-pdf.mjs'), str(dist / 'about.html'), str(pdf)], check=True, cwd=root)
 pdf_b64 = base64.b64encode(pdf.read_bytes()).decode()
@@ -62,7 +65,7 @@ pdf_b64 = base64.b64encode(pdf.read_bytes()).decode()
 app = (root / 'index.html').read_text()
 app = re.sub(r'<meta (?:property="og|name="twitter)[^>]*>\n', '', app)
 app = sub_once(r'<a class="about" href="[^"]*"[^>]*>About</a>', '<a class="about" href="#about" id="aboutBtn">About</a>', app)
-app = sub_once(r'<footer>.*?</footer>', '<footer><a href="#about" data-about>About KnockLock</a> · <a href="#about-pdf" data-about-pdf>About KnockLock (PDF)</a> · Free and open source (MIT licence). Notation by VexFlow, PDF by jsPDF.</footer>', app)
+app = sub_once(r'<p class="links">.*?</p>', '<p class="links"><a href="#about" data-about>About KnockLock</a> · <a href="#about-pdf" data-about-pdf>About KnockLock (PDF)</a> · Free and open source (MIT licence). Notation by VexFlow, PDF by jsPDF.</p>', app)
 app = sub_once(r'<script>\n// Installable and offline.*?</script>\n', '', app)
 panel = '''<dialog id="aboutDlg" aria-label="About KnockLock" style="width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#f4f5f7">
 <iframe id="aboutFrame" title="About KnockLock" style="width:100%;height:100%;border:0;display:block"></iframe>

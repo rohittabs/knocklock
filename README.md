@@ -84,6 +84,15 @@ tests/                rhythm, page and file tests
 tools/                local server, logo, icon and picture generators
 ```
 
+## Made by
+
+<p>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/rohit-mishra-white.png">
+    <img src="assets/brand/rohit-mishra.png" alt="Rohit Mishra, music educator" width="240">
+  </picture>
+</p>
+
 ## License
 
 [MIT](LICENSE).
