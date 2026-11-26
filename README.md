@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="KnockLock" width="380">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
+    <img src="assets/logo.svg" alt="KnockLock" width="380">
+  </picture>
 </p>
 
 <p align="center"><strong>Rhythm passwords for your studio door.</strong><br>
