@@ -64,6 +64,7 @@ npm install         # VexFlow, jsPDF and Playwright
 python3 build.py    # src/app.html -> index.html
 npm test            # rhythm rules, the page, and the PDF download (run `npx playwright install chromium` once first)
 npm run assets      # redraw the icons, the About page pictures and the social preview
+python3 tools/make-team-copy.py   # dist/KnockLock.html: one file to send to other teachers, About built in, no links out
 ```
 
 The tests generate thousands of rhythms in every time signature and check that each bar is full, every note is placed and beamed by the rules, ties are valid, and the poster draws in every paper size and colour. They also download the PDF with the internet switched off.
