@@ -38,6 +38,7 @@ about = re.sub(r'<link rel="(?:icon|apple-touch-icon)"[^>]*>\n', '', about)
 about = re.sub(r'(src="|url\()(assets/[^")\s]+)', lambda m: m.group(1) + data_uri(m.group(2)), about)
 about = sub_once(r'\s*<a class="ghost" href="https://github.com/[^"]*">[^<]*</a>', '', about)
 about = about.replace('Save <code>index.html</code> and it works', 'This one file works')
+about = sub_once(r'\n<footer>.*?</footer>', '', about)  # no credits line at the bottom of About
 # In the PDF, "Open KnockLock" opens KnockLock.html in the same folder as the PDF. The browser can only
 # print absolute links, so it prints a placeholder that is swapped for the relative link afterwards.
 OPEN_PLACEHOLDER = 'https://open.knocklock.invalid/'
