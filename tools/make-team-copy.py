@@ -92,7 +92,7 @@ pdf_b64 = base64.b64encode(inner_pdf.read_bytes()).decode()
 app = (root / 'index.html').read_text()
 app = re.sub(r'<meta (?:property="og|name="twitter)[^>]*>\n', '', app)
 app = sub_once(r'<a class="about" href="[^"]*"[^>]*>About</a>', '<a class="about" href="#about" id="aboutBtn">About</a>', app)
-app = sub_once(r'<p class="links">.*?</p>', '<p class="links"><a href="#about" data-about>About KnockLock</a> · <a href="#about-pdf" data-about-pdf>About KnockLock (PDF)</a> · Free and open source (MIT licence). Notation by VexFlow, PDF by jsPDF.</p>', app)
+app = sub_once(r'<p class="links">.*?</p>', '', app)  # the footer keeps only "Made by"
 app = sub_once(r'<script>\n// Installable and offline.*?</script>\n', '', app)
 panel = '''<dialog id="aboutDlg" aria-label="About KnockLock" style="width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#f4f5f7">
 <iframe id="aboutFrame" title="About KnockLock" style="width:100%;height:100%;border:0;display:block"></iframe>
