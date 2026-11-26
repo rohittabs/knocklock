@@ -3,7 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KnockLock</title>
+<title>KnockLock: rhythm passwords for your studio door</title>
+<meta name="description" content="Generate a 4 bar rhythm password, print it as a PDF poster for your studio door, and your student knocks it to come in. Free, works offline.">
+<meta name="theme-color" content="#14181f">
+<meta property="og:type" content="website">
+<meta property="og:title" content="KnockLock">
+<meta property="og:description" content="Rhythm passwords for your studio door. Generate a 4 bar rhythm, print it as a PDF poster, and students knock it to come in.">
+<meta property="og:image" content="https://rohittabs.github.io/knocklock/assets/social-preview.png">
+<meta property="og:url" content="https://rohittabs.github.io/knocklock/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="KnockLock"%3E %3Ctitle%3EKnockLock%3C/title%3E %3Crect width="512" height="512" rx="104" fill="#14181f"/%3E %3Cg transform="translate%28-38 -30%29 scale%281.15%29"%3E %3Cpath fill="#ffffff" d="M156 92L356 76v54L156 146z"/%3E %3Cpath fill="#ffffff" d="M156 100h24v172h-24zM332 86h24v186h-24z"/%3E %3Crect fill="#ffffff" x="112" y="236" width="288" height="196" rx="34"/%3E %3Cellipse fill="#14181f" cx="256" cy="310" rx="36" ry="27" transform="rotate%28-22 256 310%29"/%3E %3Cpath fill="#14181f" d="M245 318h22l9 64h-40z"/%3E %3C/g%3E %3C/svg%3E" type="image/svg+xml">
 <style>
 /*@@FONTS@@*/
 /*
@@ -19,6 +28,7 @@ LAYOUT: proof left, settings column right; stacks to title, proof, settings on p
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,"Helvetica Neue",Arial,sans-serif;overflow-x:clip}
 header{background:light-dark(#14181f,#0a0c10);color:#fff;padding:26px max(4vw,16px) 28px}
 header .in{max-width:1240px;margin:0 auto}
+header .brand{display:flex;align-items:center;gap:14px}header .logo{width:46px;height:46px;flex:none}header h1 span{color:#8fb0dc}header .about{margin-left:auto;color:#fff;text-decoration:none;font-weight:600;font-size:15px;border:1px solid #3a4250;border-radius:8px;padding:8px 14px}header .about:hover{border-color:#8fb0dc}footer a{color:inherit}
 header h1{margin:0;font:700 clamp(30px,4vw,44px)/1.05 "Playfair Display",Georgia,serif;text-wrap:balance}
 header p{margin:8px 0 0;max-width:64ch;color:#b9c0cc}
 main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,400px);gap:28px;padding:28px max(4vw,16px) 40px;max-width:1240px;margin:0 auto;align-items:start}
@@ -65,7 +75,7 @@ footer{color:var(--soft);font-size:13px;padding:0 max(4vw,16px) 30px;max-width:1
 </head>
 <body>
 <header><div class="in">
-  <h1>KnockLock</h1>
+  <div class="brand"><svg class="logo" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="#f2f4f7"/><g transform="translate(0 0) scale(1.0)"> <path fill="#14181f" d="M156 92L356 76v54L156 146z"/> <path fill="#14181f" d="M156 100h24v172h-24zM332 86h24v186h-24z"/> <rect fill="#14181f" x="112" y="236" width="288" height="196" rx="34"/> <ellipse fill="#f2f4f7" cx="256" cy="310" rx="36" ry="27" transform="rotate(-22 256 310)"/> <path fill="#f2f4f7" d="M245 318h22l9 64h-40z"/> </g></svg><h1>Knock<span>Lock</span></h1><a class="about" href="https://rohittabs.github.io/knocklock/about.html" target="_blank" rel="noopener">About</a></div>
   <p>Create a 4 bar rhythm password for your studio door. Choose the note values your student knows, generate a rhythm, and download it as a print-ready PDF.</p>
 </div></header>
 <main>
@@ -132,6 +142,7 @@ footer{color:var(--soft);font-size:13px;padding:0 max(4vw,16px) 30px;max-width:1
     </div>
   </aside>
 </main>
+<footer><a href="https://rohittabs.github.io/knocklock/about.html" target="_blank" rel="noopener">About KnockLock</a> · <a href="https://github.com/rohittabs/knocklock" target="_blank" rel="noopener">Source on GitHub</a> · Free and open source (MIT licence). Notation by VexFlow, PDF by jsPDF.</footer>
 
 <script>/*@@VEXFLOW@@*/</script>
 <script>/*@@JSPDF@@*/</script>
@@ -633,6 +644,13 @@ $('pdf').addEventListener('click', async ()=>{
 
 Promise.all(['400 40px Inter','600 40px Inter','700 40px Inter','700 40px "Playfair Display"'].map(f=>document.fonts.load(f))).catch(()=>{}).then(()=>{ build(newSeed()); });
 window.__knock = {noteTicks, buildNotes, placeSpan, METERS, eventsOf, swingPos, countLabel, drawPoster, VF, makeRhythm, CELLS, PRESETS, build, get cur(){return cur;}, makePdfBlob};
+}
+</script>
+<script>
+// Installable and offline when served from a website (GitHub Pages or npm start). The single shared file does not need this.
+if (/^https?:$/.test(location.protocol) && 'serviceWorker' in navigator && window.top === window) {
+  const l = document.createElement('link'); l.rel = 'manifest'; l.href = 'manifest.webmanifest'; document.head.append(l);
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 </script>
 </body>

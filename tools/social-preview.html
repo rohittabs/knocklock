@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>KnockLock social preview</title>
+<style>
+@font-face{font-family:Inter;font-weight:400;src:url(../assets/fonts/Inter-400.woff2) format('woff2')}
+@font-face{font-family:Inter;font-weight:600;src:url(../assets/fonts/Inter-600.woff2) format('woff2')}
+@font-face{font-family:'Playfair Display';font-weight:700;src:url(../assets/fonts/PlayfairDisplay-700.woff2) format('woff2')}
+html,body{margin:0;width:1280px;height:640px;overflow:hidden}
+body{background:#f4f5f7;font-family:Inter,sans-serif;color:#14181f;position:relative}
+.band{position:absolute;inset:0 auto 0 0;width:760px;padding:84px 0 0 96px;box-sizing:border-box}
+.logo{height:92px;display:block}
+h1{font:700 58px/1.08 'Playfair Display',serif;margin:44px 0 18px;letter-spacing:-.5px}
+p{font-size:26px;color:#5b6472;margin:0 0 34px}
+.chips{display:flex;flex-wrap:wrap;gap:12px;max-width:600px}
+.chips span{font-weight:600;font-size:21px;padding:11px 20px;border-radius:999px;background:#fff;border:1px solid #dfe3e9;color:#1f3a5f}
+.poster{position:absolute;right:92px;top:46px;width:380px;transform:rotate(3deg);box-shadow:0 2px 6px rgb(0 0 0/.12),0 24px 60px rgb(20 24 31/.22);background:#fff}
+.tape{position:absolute;right:236px;top:28px;width:92px;height:34px;background:rgb(220 214 196/.75);transform:rotate(-4deg)}
+</style>
+</head>
+<body>
+  <div class="band">
+    <img class="logo" src="../assets/logo.svg" alt="KnockLock">
+    <h1>Rhythm passwords for your studio door.</h1>
+    <p>Print the poster. Your student knocks it to come in.</p>
+    <div class="chips"><span>Choose the note values</span><span>Print-ready PDF</span><span>Simple and compound time</span><span>Works offline</span></div>
+  </div>
+  <img class="poster" src="../assets/examples/poster.png" alt="">
+  <div class="tape"></div>
+</body>
+</html>

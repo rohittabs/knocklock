@@ -2,7 +2,18 @@
   "name": "knocklock",
   "version": "1.0.0",
   "private": true,
-  "description": "Rhythm password posters for a music studio door",
-  "scripts": { "build": "python3 build.py" },
-  "devDependencies": { "jspdf": "4.2.1", "vexflow": "4.2.5" }
+  "description": "KnockLock: rhythm passwords for your studio door. Generate a 4 bar rhythm, print it as a PDF poster, and students knock it to come in.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "build": "python3 build.py",
+    "start": "node tools/serve.mjs",
+    "assets": "node tools/make-assets.mjs",
+    "test": "node --test --test-concurrency=1 \"tests/*.test.mjs\""
+  },
+  "devDependencies": {
+    "jspdf": "4.2.1",
+    "playwright": "1.63.0",
+    "vexflow": "4.2.5"
+  }
 }

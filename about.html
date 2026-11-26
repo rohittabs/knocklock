@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>About KnockLock: everything it does</title>
+<meta name="description" content="Everything KnockLock does: rhythm passwords for a music studio door. Choose the note values, generate a 4 bar rhythm, and print it as a PDF poster that your student knocks to come in.">
+<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:title" content="About KnockLock: everything it does">
+<meta property="og:description" content="Rhythm passwords for your studio door. Generate a 4 bar rhythm, print it as a PDF poster, and students knock it to come in.">
+<meta property="og:image" content="https://rohittabs.github.io/knocklock/assets/social-preview.png">
+<meta property="og:url" content="https://rohittabs.github.io/knocklock/about.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<style>
+@font-face{font-family:Inter;font-weight:400;font-display:swap;src:url(assets/fonts/Inter-400.woff2) format('woff2')}
+@font-face{font-family:Inter;font-weight:600;font-display:swap;src:url(assets/fonts/Inter-600.woff2) format('woff2')}
+@font-face{font-family:Inter;font-weight:700;font-display:swap;src:url(assets/fonts/Inter-700.woff2) format('woff2')}
+@font-face{font-family:'Playfair Display';font-weight:700;font-display:swap;src:url(assets/fonts/PlayfairDisplay-700.woff2) format('woff2')}
+/*
+VOICE: calm, professional, written for a music teacher.
+IDEA: the app's own posters, one idea per screen, like flipping through a printed brochure.
+COLOUR and TYPE: the app's white and graphite with the deep navy accent; Playfair Display titles, Inter text.
+*/
+:root{color-scheme:light dark;--bg:light-dark(#f4f5f7,#0f1115);--card:light-dark(#ffffff,#171a20);--ink:light-dark(#14181f,#e9ecf1);--soft:light-dark(#5b6472,#9aa3b2);--line:light-dark(#dfe3e9,#2a2f39);--acc:light-dark(#1f3a5f,#8fb0dc);--accbg:light-dark(#eaf0f7,#1d2a3c)}
+*{box-sizing:border-box}
+html{scroll-snap-type:y proximity;scroll-behavior:smooth}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 Inter,"Helvetica Neue",Arial,sans-serif}
+a{color:var(--acc)}
+.bar{position:fixed;inset:0 0 auto 0;z-index:5;display:flex;align-items:center;gap:12px;padding:12px max(4vw,16px);background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar .home{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:700}
+.bar .home img{width:30px;height:30px}
+.bar .open{margin-left:auto;background:var(--acc);color:light-dark(#fff,#0f1115);text-decoration:none;font-weight:600;font-size:15px;border-radius:8px;padding:9px 16px}
+.progress{position:absolute;left:0;bottom:-1px;height:2px;width:0;background:var(--acc)}
+.slide{min-height:100svh;scroll-snap-align:start;display:grid;align-content:center;padding:84px max(5vw,18px) 48px}
+.inner{width:100%;max-width:980px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:48px;align-items:center}
+.slide.text .inner,.hero .inner,.end .inner{grid-template-columns:minmax(0,1fr);max-width:760px}
+.kicker{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--acc);margin:0 0 10px}
+h1,h2{font-family:"Playfair Display",Georgia,serif;font-weight:700;line-height:1.08;margin:0 0 16px;text-wrap:balance}
+h1{font-size:clamp(44px,7vw,76px)}
+h2{font-size:clamp(32px,4.4vw,48px)}
+p{margin:0 0 14px;max-width:60ch}
+.lead{font-size:clamp(19px,2.2vw,23px);color:var(--soft)}
+ul{margin:6px 0 0;padding-left:20px}
+li{margin:4px 0}
+.logo{height:clamp(48px,8vw,80px);max-width:100%;margin-bottom:28px}
+.logo.dark{display:none}
+@media(prefers-color-scheme:dark){.logo.light{display:none}.logo.dark{display:block}}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.chips a{font-size:15px;font-weight:600;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 14px}
+.chips a:hover{border-color:var(--acc);color:var(--acc)}
+.pic{margin:0;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 1px 3px rgb(0 0 0/.08),0 12px 32px rgb(20 24 31/.10)}
+.pic img{display:block;width:100%;height:auto}
+.pic.tall{max-width:420px;justify-self:center;transform:rotate(1.5deg)}
+.stack{display:grid;gap:14px}
+figcaption{font-size:13px;color:#5b6472;margin-top:8px;text-align:center}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:22px}
+.fact{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.fact b{display:block;font-size:16px;margin-bottom:4px}
+.fact span{color:var(--soft);font-size:15px}
+.num{font:700 clamp(54px,9vw,96px)/1 "Playfair Display",Georgia,serif;letter-spacing:.06em;color:var(--acc);margin:6px 0 18px;font-variant-numeric:tabular-nums}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
+.cta a{display:inline-flex;align-items:center;min-height:48px;padding:0 22px;border-radius:8px;font-weight:600;text-decoration:none}
+.cta .primary{background:var(--acc);color:light-dark(#fff,#0f1115)}
+.cta .ghost{border:1px solid var(--line);color:var(--ink);background:var(--card)}
+.hint{max-width:none;margin:0;position:absolute;left:0;right:0;bottom:22px;text-align:center;font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+.hero{position:relative}
+footer{scroll-snap-align:end;padding:24px max(5vw,18px) 40px;color:var(--soft);font-size:14px;text-align:center}
+@media(max-width:820px){.facts{grid-template-columns:minmax(0,1fr)}.inner{grid-template-columns:minmax(0,1fr);gap:28px}.slide{padding-top:76px}.pic.tall{max-width:340px}}
+@media(max-height:620px){html{scroll-snap-type:none}}
+</style>
+</head>
+<body>
+<nav class="bar" aria-label="KnockLock">
+  <a class="home" href="./"><img src="assets/icons/icon.svg" alt="" width="30" height="30">KnockLock</a>
+  <a class="open" href="./">Open KnockLock</a>
+  <i class="progress" id="progress" aria-hidden="true"></i>
+</nav>
+
+<main>
+  <section class="slide hero" id="top" aria-labelledby="h-top">
+    <div class="inner">
+      <div>
+        <img class="logo light" src="assets/logo.svg" alt="KnockLock">
+        <img class="logo dark" src="assets/logo-dark.svg" alt="KnockLock">
+        <h1 id="h-top">Everything KnockLock does.</h1>
+        <p class="lead">Rhythm passwords for your studio door. Generate a 4 bar rhythm, print it as a poster, and your student knocks it to come in.</p>
+        <nav class="chips" aria-label="Jump to">
+          <a href="#idea">The idea</a>
+          <a href="#notes">Note values</a>
+          <a href="#counting">Counting</a>
+          <a href="#meters">Time signatures</a>
+          <a href="#swing">Swing</a>
+          <a href="#rules">Engraving</a>
+          <a href="#attempts">Penalties</a>
+          <a href="#poster">Poster</a>
+          <a href="#number">Password number</a>
+          <a href="#print">Printing</a>
+          <a href="#offline">Offline</a>
+        </nav>
+      </div>
+    </div>
+    <p class="hint" aria-hidden="true">Scroll or press ↓</p>
+  </section>
+
+  <section class="slide" id="idea" aria-labelledby="h-idea">
+    <div class="inner">
+      <div>
+        <p class="kicker">The idea</p>
+        <h2 id="h-idea">A password your student has to knock.</h2>
+        <p>Print a rhythm and stick it on your studio door. Before coming in, your student reads it and knocks it on the door.</p>
+        <p>They get three attempts. After three wrong ones, the penalty printed on the poster applies. It turns the walk to the door into a quick sight-reading warm up.</p>
+      </div>
+      <figure class="pic tall"><img src="assets/examples/poster.png" alt="A KnockLock poster: the title Rhythm Password, four lines of rhythm with counting under the notes, how to enter, and the penalty after three incorrect attempts." width="900" height="1273"></figure>
+    </div>
+  </section>
+
+  <section class="slide" id="notes" aria-labelledby="h-notes">
+    <div class="inner">
+      <div>
+        <p class="kicker">Note values</p>
+        <h2 id="h-notes">Only what your student can read.</h2>
+        <p>Tick the note values your student knows. Each new rhythm tries to use all of them, and nothing else.</p>
+        <ul>
+          <li>Whole, half, dotted half, quarter and dotted quarter notes</li>
+          <li>Eighths, 16ths and 32nds, dotted rhythms and syncopation</li>
+          <li>Eighth, quarter and 16th note triplets</li>
+          <li>Rests from the whole rest to the 16th rest</li>
+          <li>Ties, including ties across the barline</li>
+        </ul>
+        <p style="margin-top:14px">Beginner, Intermediate, Advanced and All presets get you started in one click.</p>
+      </div>
+      <figure class="pic"><img src="assets/examples/note-values.png" alt="The note values panel in KnockLock, with tiles for each note value and the Beginner, Intermediate, Advanced and All presets."></figure>
+    </div>
+  </section>
+
+  <section class="slide" id="counting" aria-labelledby="h-counting">
+    <div class="inner">
+      <div>
+        <p class="kicker">Counting</p>
+        <h2 id="h-counting">The count is printed under every note.</h2>
+        <p>Simple time is counted <b>1 e + a</b>. Triplets read <b>1 T L</b> (for trip-let), and 16th note triplets read <b>1 T L + T L</b>.</p>
+        <p>Beats you hold or rest through are shown in brackets, like <b>(3)</b>, so the student can see the beat even when they do not knock it. You can also switch the counting off for a harder poster.</p>
+      </div>
+      <figure class="pic"><img src="assets/examples/counting.png" alt="A bar of 4/4 with the counting 1, 2 e + a, (3), +, 4 + printed under the notes."></figure>
+    </div>
+  </section>
+
+  <section class="slide" id="meters" aria-labelledby="h-meters">
+    <div class="inner">
+      <div>
+        <p class="kicker">Time signatures</p>
+        <h2 id="h-meters">Simple and compound time.</h2>
+        <p>Choose 2/4, 3/4, 4/4, 6/8, 7/8 or 12/8. 7/8 is grouped 2+2+3.</p>
+        <p>Compound time has its own note groups, like three beamed eighths, the dotted quarter, and quarter plus eighth. They are counted in eighths: 1 2 3 4 5 6.</p>
+      </div>
+      <div class="stack">
+        <figure class="pic"><img src="assets/examples/compound.png" alt="A bar of 6/8 counted 1 2 3 4 5 6."></figure>
+        <figure class="pic"><img src="assets/examples/seven-eight.png" alt="A bar of 7/8 grouped 2+2+3."></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="swing" aria-labelledby="h-swing">
+    <div class="inner">
+      <div>
+        <p class="kicker">Swing</p>
+        <h2 id="h-swing">Straight, swing 8ths or swing 16ths.</h2>
+        <p>In swing, the poster shows the standard swing marking at the top, so the student knows to play the eighths (or 16ths) long and short.</p>
+        <p>Swing works in 2/4, 3/4 and 4/4.</p>
+      </div>
+      <figure class="pic"><img src="assets/examples/swing.png" alt="The swing marking: two eighths equal a triplet quarter and eighth, above a bar of 4/4."></figure>
+    </div>
+  </section>
+
+  <section class="slide text" id="rules" aria-labelledby="h-rules">
+    <div class="inner">
+      <div>
+        <p class="kicker">Engraving</p>
+        <h2 id="h-rules">Written the way a musician expects.</h2>
+        <p>Every rhythm follows standard notation practice, so students learn to read real music, not a computer's version of it.</p>
+        <div class="facts">
+          <div class="fact"><b>Beamed by the beat</b><span>Notes are beamed in beat groups: by the quarter in simple time, by the dotted quarter in compound time, and 2+2+3 in 7/8.</span></div>
+          <div class="fact"><b>The middle of the bar shows</b><span>A note never hides beat 3 of a 4/4 bar or the middle of a 12/8 bar. A tie is used instead.</span></div>
+          <div class="fact"><b>Rests in the right place</b><span>Half rests are used only in 4/4, on beat 1 or beat 3, the way they are written in printed music.</span></div>
+          <div class="fact"><b>One bar per line</b><span>Always four lines, one bar on each, so the poster reads from across the room.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="attempts" aria-labelledby="h-attempts">
+    <div class="inner">
+      <div>
+        <p class="kicker">Three attempts</p>
+        <h2 id="h-attempts">Penalties made for one‑to‑one lessons.</h2>
+        <p>Pick from 19 penalties in four groups: practise it right away, extra lesson work, fun but useful, and gentle ones for young students. Or write your own.</p>
+        <p>The default is <b>5 minutes of extra rhythm practice at the start of the lesson</b>.</p>
+      </div>
+      <figure class="pic"><img src="assets/examples/how-to-enter.png" alt="How to enter: 1 Figure out the rhythm. 2 Knock the rhythm on the door at a tempo of your choice. 3 Wait for the teacher's response. Beside it: You have three attempts, and the penalty after three incorrect attempts."></figure>
+    </div>
+  </section>
+
+  <section class="slide" id="poster" aria-labelledby="h-poster">
+    <div class="inner">
+      <div>
+        <p class="kicker">Poster</p>
+        <h2 id="h-poster">Your studio, your look.</h2>
+        <ul>
+          <li>A4 or US Letter, portrait or landscape</li>
+          <li>Black and white (the default, cheapest to print), navy, charcoal and gold, burgundy or forest green</li>
+          <li>Your own title, and your studio or teacher name at the top</li>
+        </ul>
+      </div>
+      <figure class="pic"><img src="assets/examples/poster-navy-landscape.png" alt="A landscape KnockLock poster in the navy colour theme."></figure>
+    </div>
+  </section>
+
+  <section class="slide text" id="number" aria-labelledby="h-number">
+    <div class="inner">
+      <div>
+        <p class="kicker">Password number</p>
+        <h2 id="h-number">Every rhythm has a number.</h2>
+        <p class="num" aria-hidden="true">4821</p>
+        <p>Each poster carries a 4-digit password number. Type it into <b>Recall a rhythm</b> with the same note values and time signature, and the same rhythm comes back. Keep the number to check your student's knock, or to reprint a poster later.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide text" id="print" aria-labelledby="h-print">
+    <div class="inner">
+      <div>
+        <p class="kicker">Printing</p>
+        <h2 id="h-print">A print-ready PDF in one click.</h2>
+        <p>Press <b>Download PDF</b> and print it at 100% size. The music is drawn at print resolution, so it stays sharp on the door. What you see in the preview is exactly what prints.</p>
+        <p>Press <b>New Rhythm</b> as often as you like until you find one you want.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide text" id="offline" aria-labelledby="h-offline">
+    <div class="inner">
+      <div>
+        <p class="kicker">Offline and private</p>
+        <h2 id="h-offline">One file. No account. No internet needed.</h2>
+        <p>KnockLock is a single web page with everything built in. Save <code>index.html</code> and it works without an internet connection, so you can share it with other teachers by email, chat or a USB stick.</p>
+        <p>Nothing is uploaded and nothing is tracked. Your choices are remembered in your own browser.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide end" id="start" aria-labelledby="h-start">
+    <div class="inner">
+      <div>
+        <h2 id="h-start">Make your first rhythm password.</h2>
+        <p class="lead">Free and open source.</p>
+        <div class="cta">
+          <a class="primary" href="./">Open KnockLock</a>
+          <a class="ghost" href="https://github.com/rohittabs/knocklock">Source on GitHub</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer>KnockLock is free software under the MIT licence. Notation by VexFlow, PDF by jsPDF, type in Inter and Playfair Display.</footer>
+
+<script>
+  // Progress line under the top bar.
+  const bar = document.getElementById('progress');
+  const onScroll = () => { const h = document.documentElement; bar.style.width = (100 * h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight)) + '%'; };
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+</script>
+</body>
+</html>

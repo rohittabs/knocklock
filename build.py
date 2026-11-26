@@ -1,6 +1,7 @@
-"""Build index.html from src/app.html by inlining fonts and libraries.
+"""Builds index.html from src/app.html by inlining the fonts and the two libraries,
+so the page is one file that works offline.
 
-Needs: npm install (vexflow and jspdf are listed in package.json).
+Needs: npm install   (vexflow and jspdf, the versions in package.json)
 Run:   python3 build.py
 """
 import pathlib

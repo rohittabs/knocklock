@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="KnockLock">
+  <title>KnockLock</title>
+  <rect width="512" height="512" rx="104" fill="#14181f"/>
+  <g transform="translate(-38 -30) scale(1.15)">
+    <path fill="#ffffff" d="M156 92L356 76v54L156 146z"/>
+    <path fill="#ffffff" d="M156 100h24v172h-24zM332 86h24v186h-24z"/>
+    <rect fill="#ffffff" x="112" y="236" width="288" height="196" rx="34"/>
+    <ellipse fill="#14181f" cx="256" cy="310" rx="36" ry="27" transform="rotate(-22 256 310)"/>
+    <path fill="#14181f" d="M245 318h22l9 64h-40z"/>
+  </g>
+</svg>

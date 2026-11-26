@@ -1,0 +1,24 @@
+# Runs the tests on every pull request and on main: the rhythm rules, the page itself,
+# the PDF download with no internet, and that index.html was rebuilt after changes to src/.
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Install
+        run: npm install --no-audit --no-fund && npx playwright install --with-deps chromium
+      - name: Tests
+        run: npm test
