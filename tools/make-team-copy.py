@@ -7,7 +7,7 @@ It works with no internet connection.
 It also makes dist/About-KnockLock.pdf, the About page as a PDF, which the file
 can download too.
 
-Run after python3 build.py:  python3 tools/make-team-copy.py   (needs: pip install pillow, npm install)
+Run after python3 build.py:  python3 tools/make-team-copy.py   (needs: pip install pillow pypdf, npm install)
 """
 import base64, io, pathlib, re, subprocess
 from PIL import Image
@@ -38,9 +38,11 @@ about = re.sub(r'<link rel="(?:icon|apple-touch-icon)"[^>]*>\n', '', about)
 about = re.sub(r'(src="|url\()(assets/[^")\s]+)', lambda m: m.group(1) + data_uri(m.group(2)), about)
 about = sub_once(r'\s*<a class="ghost" href="https://github.com/[^"]*">[^<]*</a>', '', about)
 about = about.replace('Save <code>index.html</code> and it works', 'This one file works')
-# In the PDF, "Open KnockLock" opens the website (a PDF cannot open a file next to it everywhere),
-# and the last page also says to open KnockLock.html.
-about_pdf = about.replace('href="./"', 'href="https://rohittabs.github.io/knocklock/"')
+# In the PDF, "Open KnockLock" opens KnockLock.html in the same folder as the PDF. The browser can only
+# print absolute links, so it prints a placeholder that is swapped for the relative link afterwards.
+OPEN_PLACEHOLDER = 'https://open.knocklock.invalid/'
+about_pdf = about.replace('href="./"', f'href="{OPEN_PLACEHOLDER}"')
+about_pdf = about_pdf.replace('Or open <b>KnockLock.html</b> in any web browser.', 'Keep this PDF in the same folder as <b>KnockLock.html</b>, or open KnockLock.html in any web browser.')
 # Inside the file, "Open KnockLock" closes the About panel instead of going to the website
 about = about.replace('href="./"', 'href="#" data-close')
 about = sub_once(r'(<a class="open" href="#" data-close>)', r'<a class="open pdf" href="#" data-pdf>Download PDF</a>\1', about)
@@ -59,6 +61,22 @@ dist.mkdir(exist_ok=True)
 (dist / 'about.html').write_text(about_pdf)
 pdf = dist / 'About-KnockLock.pdf'
 subprocess.run(['node', str(root / 'tools' / 'make-about-pdf.mjs'), str(dist / 'about.html'), str(pdf)], check=True, cwd=root)
+
+from pypdf import PdfReader, PdfWriter
+from pypdf.generic import NameObject, TextStringObject
+writer = PdfWriter(clone_from=PdfReader(pdf))
+links = 0
+for page in writer.pages:
+    for annot in page.get('/Annots') or []:
+        action = annot.get_object().get('/A')
+        if action is not None and action.get_object().get('/URI') == OPEN_PLACEHOLDER:
+            action.get_object()[NameObject('/URI')] = TextStringObject('KnockLock.html')
+            links += 1
+writer.add_metadata({'/Title': 'About KnockLock', '/Author': 'Rohit Mishra'})
+with open(pdf, 'wb') as fh:
+    writer.write(fh)
+assert links >= 2, 'Open KnockLock links not found in the PDF'
+assert b'github' not in pdf.read_bytes().lower(), 'the PDF still mentions GitHub'
 pdf_b64 = base64.b64encode(pdf.read_bytes()).decode()
 
 # ---- the app ----
