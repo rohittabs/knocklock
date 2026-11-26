@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KnockLock</title>
+<style>
+/*@@FONTS@@*/
+/*
+VOICE: calm, professional studio tool for a private music teacher.
+IDEA: an engraved notice on a studio door; the page is the editor beside its print proof.
+PICTURE: the live poster proof, exactly what the PDF will be.
+COLOUR and TYPE: white and graphite with one deep navy accent; Playfair Display titles, Inter for everything else.
+LAYOUT: proof left, settings column right; stacks to title, proof, settings on phones.
+*/
+:root{color-scheme:light dark;--bg:light-dark(#f4f5f7,#0f1115);--card:light-dark(#ffffff,#171a20);--ink:light-dark(#14181f,#e9ecf1);--soft:light-dark(#5b6472,#9aa3b2);--line:light-dark(#dfe3e9,#2a2f39);--acc:light-dark(#1f3a5f,#8fb0dc);--accbg:light-dark(#eaf0f7,#1d2a3c);--btn:#1f3a5f;--err:light-dark(#a32020,#ff8a8a)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,"Helvetica Neue",Arial,sans-serif;overflow-x:clip}
+header{background:light-dark(#14181f,#0a0c10);color:#fff;padding:26px max(4vw,16px) 28px}
+header .in{max-width:1240px;margin:0 auto}
+header h1{margin:0;font:700 clamp(30px,4vw,44px)/1.05 "Playfair Display",Georgia,serif;text-wrap:balance}
+header p{margin:8px 0 0;max-width:64ch;color:#b9c0cc}
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,400px);gap:28px;padding:28px max(4vw,16px) 40px;max-width:1240px;margin:0 auto;align-items:start}
+.posterwrap{position:sticky;top:16px;display:grid;gap:14px}
+.poster{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+#poster{width:100%;height:auto;display:block;aspect-ratio:210/297;background:#fff;box-shadow:0 1px 3px rgb(0 0 0/.12),0 8px 24px rgb(0 0 0/.08)}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+button,select,input{font:inherit;font-size:16px}
+button{min-height:44px;padding:0 18px;border-radius:8px;border:1px solid transparent;cursor:pointer;font-weight:600}
+button:focus-visible,select:focus-visible,input:focus-visible,.tile:focus-within{outline:2px solid var(--acc);outline-offset:2px}
+.primary{background:var(--btn);color:#fff}
+.primary:hover{background:#17304f}
+.dark{background:light-dark(#14181f,#e9ecf1);color:light-dark(#fff,#14181f)}
+.ghost{background:var(--card);color:var(--ink);border-color:var(--line)}
+.ghost:hover{border-color:var(--soft)}
+#status{min-height:1.5em;color:var(--soft);font-size:15px;margin:0}
+#status.err{color:var(--err)}
+aside{display:grid;gap:16px}
+.panel{background:var(--card);border-radius:10px;padding:18px;border:1px solid var(--line)}
+.panel h2{margin:0 0 4px;font-size:18px;font-weight:700}
+.hint{margin:0 0 12px;color:var(--soft);font-size:14px}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.presets button{min-height:36px;padding:0 12px;font-size:14px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.tile{position:relative;display:grid;justify-items:center;padding:6px 4px 8px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--card);transition:border-color .15s,background .15s}
+.tile input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.tile svg{width:96px;height:58px;display:block;color:var(--ink)}
+.tile span{font-size:13px;line-height:1.25;text-align:center;color:var(--soft)}
+.tile:has(input:checked){border-color:var(--acc);background:var(--accbg);box-shadow:inset 0 0 0 1px var(--acc)}
+.tile:has(input:checked) span{color:var(--ink);font-weight:600}
+.grp{margin:14px 0 6px;font-size:13px;font-weight:600;color:var(--soft)}
+label.row{display:grid;gap:4px;margin-top:12px;font-size:14px;font-weight:600}
+select,input[type=text],input[type=number]{min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:0 10px;width:100%;font-weight:400}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 12px}
+.play{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px;font-size:14px;font-weight:600}
+.code{font-size:14px;color:var(--soft);margin:0}
+.code b{color:var(--ink);font-size:20px;font-variant-numeric:tabular-nums}
+[hidden]{display:none!important}
+.check{display:flex;gap:10px;align-items:center;margin-top:12px;font-size:14px;font-weight:600;min-height:32px}.check input{width:20px;height:20px;accent-color:var(--btn)}
+footer{color:var(--soft);font-size:13px;padding:0 max(4vw,16px) 30px;max-width:1240px;margin:0 auto}
+@media(max-width:860px){main{grid-template-columns:minmax(0,1fr)}.posterwrap{position:static}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header><div class="in">
+  <h1>KnockLock</h1>
+  <p>Create a 4 bar rhythm password for your studio door. Choose the note values your student knows, generate a rhythm, and download it as a print-ready PDF.</p>
+</div></header>
+<main>
+  <section class="posterwrap" aria-label="Poster preview">
+    <div class="poster"><canvas id="poster" width="1654" height="2339" role="img" aria-label="Door poster preview"></canvas></div>
+    <div class="actions">
+      <button class="primary" id="gen">New Rhythm</button>
+      <button class="dark" id="pdf">Download PDF</button>
+    </div>
+    <p id="status" role="status"></p>
+  </section>
+  <aside>
+    <div class="panel">
+      <h2>Note values</h2>
+      <p class="hint">Select everything your student can read. Each rhythm tries to use all of them.</p>
+      <div class="presets">
+        <button class="ghost" data-preset="easy">Beginner</button>
+        <button class="ghost" data-preset="mid">Intermediate</button>
+        <button class="ghost" data-preset="hard">Advanced</button>
+        <button class="ghost" data-preset="all">All</button>
+      </div>
+      <div class="grp">Notes</div><div class="tiles" id="tNotes"></div>
+      <div class="grp">Note groups</div><div class="tiles" id="tGroups"></div>
+      <div class="grp">Rests</div><div class="tiles" id="tRests"></div>
+      <div class="grp">Compound time (6/8, 12/8 and the 3-eighth group of 7/8)</div><div class="tiles" id="tComp"></div>
+      <div class="grp">Ties</div><div class="tiles" id="tTies"></div>
+    </div>
+    <div class="panel">
+      <h2>Penalty</h2>
+      <p class="hint">Shown on the poster after 3 incorrect attempts.</p>
+      <label class="row">Choose a penalty<select id="penSel"></select></label>
+      <label class="row" id="penOwnRow" hidden>Your own penalty<input type="text" id="penalty" maxlength="80" value=""></label>
+    </div>
+    <div class="panel">
+      <h2>Poster</h2>
+      <div class="two">
+        <label class="row">Time signature
+          <select id="ts"><option value="2/4">2/4</option><option value="3/4">3/4</option><option value="4/4" selected>4/4</option><option value="6/8">6/8</option><option value="7/8">7/8 (2+2+3)</option><option value="12/8">12/8</option></select>
+        </label>
+        <label class="row">Paper
+          <select id="paper"><option value="a4p">A4 portrait</option><option value="a4l">A4 landscape</option><option value="ltp">Letter portrait</option><option value="ltl">Letter landscape</option></select>
+        </label>
+        <label class="row">Colour
+          <select id="theme"><option value="mono" selected>Black and white</option><option value="navy">Navy</option><option value="gold">Charcoal and gold</option><option value="burgundy">Burgundy</option><option value="forest">Forest green</option></select>
+        </label>
+        <label class="row">Feel
+          <select id="feel"><option value="straight">Straight</option><option value="s8">Swing 8ths</option><option value="s16">Swing 16ths</option></select>
+        </label>
+        <label class="row">Text under notes
+          <select id="syl"><option value="count" selected>1 e + a</option><option value="none">None</option></select>
+        </label>
+      </div>
+      <label class="row">Title<input type="text" id="title" maxlength="40" value="Rhythm Password"></label>
+      <label class="row">Studio or teacher name (optional)<input type="text" id="room" maxlength="40" value="" placeholder="e.g. Rohit's Music Studio"></label>
+    </div>
+    <div class="panel">
+      <h2>Recall a rhythm</h2>
+      <p class="code">Password number <b id="codeOut">0000</b></p>
+      <div class="two">
+        <label class="row">Recall a number<input type="number" id="codeIn" min="1000" max="9999" placeholder="e.g. 4821"></label>
+        <button class="ghost" id="loadCode" style="align-self:end">Show</button>
+      </div>
+      <p class="hint" style="margin-top:8px">The same number with the same note values and time signature gives the same rhythm.</p>
+    </div>
+  </aside>
+</main>
+
+<script>/*@@VEXFLOW@@*/</script>
+<script>/*@@JSPDF@@*/</script>
+<script>
+{
+const VF = Vex.Flow;
+// ---------- rhythm cells (ticks: quarter = 24, eighth = 12) ----------
+const BASE = {w:96,h:48,q:24,'8':12,'16':6,'32':3};
+const noteTicks = (c,x) => BASE[x.d]*(x.dot?1.5:1)*(x.tr?2/3:1);
+// Meters: each bar is a list of beat groups. 24 = simple beat (quarter), 36 = compound beat (dotted quarter).
+const METERS = {
+  '2/4':{groups:[24,24],num:2,den:4}, '3/4':{groups:[24,24,24],num:3,den:4}, '4/4':{groups:[24,24,24,24],num:4,den:4},
+  '6/8':{groups:[36,36],num:6,den:8}, '7/8':{groups:[24,24,36],num:7,den:8}, '12/8':{groups:[36,36,36,36],num:12,den:8}
+};
+Object.values(METERS).forEach(m=>{ m.len = m.groups.reduce((a,b)=>a+b,0); m.compound = m.groups.every(g=>g===36); m.mixed = m.groups.some(g=>g===36) && !m.compound; m.simple = m.groups.every(g=>g===24); });
+// n: d = duration, r = rest, dot = dotted. b = beam groups (note indexes). t = triplet. k:'c' = compound beat pattern.
+const CELLS = [
+  {id:'w',  g:'tNotes', name:'Whole note', len:96, n:[{d:'w'}], syl:['ta-a-a-a']},
+  {id:'hd', g:'tNotes', name:'Dotted half', len:72, n:[{d:'h',dot:1}], syl:['ta-a-a']},
+  {id:'h',  g:'tNotes', name:'Half note', len:48, n:[{d:'h'}], syl:['ta-a']},
+  {id:'q',  g:'tNotes', name:'Quarter note', len:24, n:[{d:'q'}], syl:['ta']},
+  {id:'qd8',g:'tNotes', name:'Dotted quarter + eighth', len:48, n:[{d:'q',dot:1},{d:'8'}], syl:['ta-i','ti']},
+  {id:'88', g:'tGroups', name:'Two eighths', len:24, n:[{d:'8'},{d:'8'}], b:[[0,1]], syl:['ti','ti']},
+  {id:'16', g:'tGroups', name:'Four sixteenths', len:24, n:[{d:'16'},{d:'16'},{d:'16'},{d:'16'}], b:[[0,1,2,3]], syl:['ti','ka','ti','ka']},
+  {id:'81616', g:'tGroups', name:'Eighth + two 16ths', len:24, n:[{d:'8'},{d:'16'},{d:'16'}], b:[[0,1,2]], syl:['ti','ti','ka']},
+  {id:'16168', g:'tGroups', name:'Two 16ths + eighth', len:24, n:[{d:'16'},{d:'16'},{d:'8'}], b:[[0,1,2]], syl:['ti','ka','ti']},
+  {id:'d816', g:'tGroups', name:'Dotted eighth + 16th', len:24, n:[{d:'8',dot:1},{d:'16'}], b:[[0,1]], syl:['tim','ka']},
+  {id:'syn', g:'tGroups', name:'Syncopation', len:48, n:[{d:'8'},{d:'q'},{d:'8'}], syl:['ti','ta','ti']},
+  {id:'trip',g:'tGroups', name:'Triplet', len:24, n:[{d:'8'},{d:'8'},{d:'8'}], b:[[0,1,2]], t:1, syl:['tri','o','la']},
+  {id:'t16x2',g:'tGroups', name:'Two 16th note triplets', len:24, n:Array.from({length:6},()=>({d:'16',tr:1})), b:[[0,1,2,3,4,5]], tg:[[0,1,2],[3,4,5]], syl:['','','','','','']},
+  {id:'t16_8',g:'tGroups', name:'16th triplet + eighth', len:24, n:[{d:'16',tr:1},{d:'16',tr:1},{d:'16',tr:1},{d:'8'}], b:[[0,1,2,3]], tg:[[0,1,2]], syl:['','','','']},
+  {id:'8_t16',g:'tGroups', name:'Eighth + 16th triplet', len:24, n:[{d:'8'},{d:'16',tr:1},{d:'16',tr:1},{d:'16',tr:1}], b:[[0,1,2,3]], tg:[[1,2,3]], syl:['','','','']},
+  {id:'qtrip',g:'tGroups', name:'Quarter note triplet', len:48, n:[{d:'q'},{d:'q'},{d:'q'}], t:1, tb:1, syl:['tri','o','la']},
+  {id:'32x8',g:'tGroups', name:'Eight 32nds', len:24, n:Array.from({length:8},()=>({d:'32'})), b:[[0,1,2,3,4,5,6,7]], syl:['ti','ri','ti','ri','ti','ri','ti','ri']},
+  {id:'832', g:'tGroups', name:'Eighth + four 32nds', len:24, n:[{d:'8'},{d:'32'},{d:'32'},{d:'32'},{d:'32'}], b:[[0,1,2,3,4]], syl:['ti','ti','ri','ti','ri']},
+  {id:'328', g:'tGroups', name:'Four 32nds + eighth', len:24, n:[{d:'32'},{d:'32'},{d:'32'},{d:'32'},{d:'8'}], b:[[0,1,2,3,4]], syl:['ti','ri','ti','ri','ti']},
+  {id:'3216x3',g:'tGroups', name:'Two 32nds + three 16ths', len:24, n:[{d:'32'},{d:'32'},{d:'16'},{d:'16'},{d:'16'}], b:[[0,1,2,3,4]], syl:['ti','ri','ka','ti','ka']},
+  {id:'16x332',g:'tGroups', name:'Three 16ths + two 32nds', len:24, n:[{d:'16'},{d:'16'},{d:'16'},{d:'32'},{d:'32'}], b:[[0,1,2,3,4]], syl:['ti','ka','ti','ka','ri']},
+  {id:'81632',g:'tGroups', name:'Eighth + 16th + two 32nds', len:24, n:[{d:'8'},{d:'16'},{d:'32'},{d:'32'}], b:[[0,1,2,3]], syl:['ti','ti','ka','ri']},
+  {id:'32168',g:'tGroups', name:'Two 32nds + 16th + eighth', len:24, n:[{d:'32'},{d:'32'},{d:'16'},{d:'8'}], b:[[0,1,2,3]], syl:['ti','ri','ka','ti']},
+  {id:'1632x8',g:'tGroups', name:'16th + two 32nds + eighth', len:24, n:[{d:'16'},{d:'32'},{d:'32'},{d:'8'}], b:[[0,1,2,3]], syl:['ti','ka','ri','ti']},
+  {id:'32d8',g:'tGroups', name:'Two 32nds + dotted eighth', len:24, n:[{d:'32'},{d:'32'},{d:'8',dot:1}], b:[[0,1,2]], syl:['ti','ri','ka']},
+  {id:'wr', g:'tRests', name:'Whole bar rest', len:0, n:[{d:'w',r:1}], syl:['sh'], any:1},
+  {id:'hr', g:'tRests', name:'Half rest', len:48, n:[{d:'h',r:1}], syl:['sh']},
+  {id:'qr', g:'tRests', name:'Quarter rest', len:24, n:[{d:'q',r:1}], syl:['sh']},
+  {id:'r8', g:'tRests', name:'Eighth rest + eighth', len:24, n:[{d:'8',r:1},{d:'8'}], syl:['sh','ti']},
+  {id:'8r', g:'tRests', name:'Eighth + eighth rest', len:24, n:[{d:'8'},{d:'8',r:1}], syl:['ti','sh']},
+  {id:'r16', g:'tRests', name:'16th rest + three 16ths', len:24, n:[{d:'16',r:1},{d:'16'},{d:'16'},{d:'16'}], b:[[1,2,3]], syl:['sh','ka','ti','ka']},
+  {id:'16r', g:'tRests', name:'Three 16ths + 16th rest', len:24, n:[{d:'16'},{d:'16'},{d:'16'},{d:'16',r:1}], b:[[0,1,2]], syl:['ti','ka','ti','sh']},
+  // compound time (one dotted-quarter beat = 36, except the dotted half)
+  {id:'cdq', g:'tComp', k:'c', name:'Dotted quarter', len:36, n:[{d:'q',dot:1}], syl:['ta']},
+  {id:'c888', g:'tComp', k:'c', name:'Three eighths', len:36, n:[{d:'8'},{d:'8'},{d:'8'}], b:[[0,1,2]], syl:['ti','ti','ti']},
+  {id:'cq8', g:'tComp', k:'c', name:'Quarter + eighth', len:36, n:[{d:'q'},{d:'8'}], syl:['ta','ti']},
+  {id:'c8q', g:'tComp', k:'c', name:'Eighth + quarter', len:36, n:[{d:'8'},{d:'q'}], syl:['ti','ta']},
+  {id:'cdh', g:'tComp', k:'c', name:'Dotted half', len:72, n:[{d:'h',dot:1}], syl:['ta-a']},
+  {id:'c16x6', g:'tComp', k:'c', name:'Six sixteenths', len:36, n:Array.from({length:6},()=>({d:'16'})), b:[[0,1,2,3,4,5]], syl:['ti','ri','ti','ri','ti','ri']},
+  {id:'c81616', g:'tComp', k:'c', name:'Eighth + two 16ths + eighth', len:36, n:[{d:'8'},{d:'16'},{d:'16'},{d:'8'}], b:[[0,1,2,3]], syl:['ti','ti','ri','ti']},
+  {id:'c161688', g:'tComp', k:'c', name:'Two 16ths + two eighths', len:36, n:[{d:'16'},{d:'16'},{d:'8'},{d:'8'}], b:[[0,1,2,3]], syl:['ti','ri','ti','ti']},
+  {id:'c88_1616', g:'tComp', k:'c', name:'Two eighths + two 16ths', len:36, n:[{d:'8'},{d:'8'},{d:'16'},{d:'16'}], b:[[0,1,2,3]], syl:['ti','ti','ti','ri']},
+  {id:'csic', g:'tComp', k:'c', name:'Dotted eighth + 16th + eighth', len:36, n:[{d:'8',dot:1},{d:'16'},{d:'8'}], b:[[0,1,2]], syl:['tim','ri','ti']},
+  {id:'cdqr', g:'tComp', k:'c', name:'Dotted quarter rest', len:36, n:[{d:'q',dot:1,r:1}], syl:['sh']},
+  {id:'cr88', g:'tComp', k:'c', name:'Eighth rest + two eighths', len:36, n:[{d:'8',r:1},{d:'8'},{d:'8'}], b:[[1,2]], syl:['sh','ti','ti']},
+  {id:'c88r', g:'tComp', k:'c', name:'Two eighths + eighth rest', len:36, n:[{d:'8'},{d:'8'},{d:'8',r:1}], b:[[0,1]], syl:['ti','ti','sh']},
+  {id:'cq8r', g:'tComp', k:'c', name:'Quarter + eighth rest', len:36, n:[{d:'q'},{d:'8',r:1}], syl:['ta','sh']},
+];
+CELLS.forEach(c=>{ c.k = c.k || 's'; if (c.t){ c.tg=[c.n.map((_,i)=>i)]; c.n.forEach(x=>x.tr=1); } c.hasTr = c.n.some(x=>x.tr); });
+const BYID = Object.fromEntries(CELLS.map(c=>[c.id,c]));
+const PRESETS = {
+  easy:['q','88','qr','h','cdq','c888','cq8'],
+  mid:['q','88','16','h','hd','w','qr','hr','cdq','c888','cq8','c8q','cdh','cdqr'],
+  hard:['q','88','16','81616','16168','qd8','syn','h','qr','r8','hr','cdq','c888','cq8','c8q','c16x6','csic','cr88','tie'],
+  all:CELLS.map(c=>c.id).concat(['tie'])
+};
+// Can this cell start at beat group gi of the meter? Returns the number of groups it fills, or 0.
+// Rules follow standard notation practice: a note never hides the middle of a 4/4 or 12/8 bar,
+// half rests only in 4/4, longer simple values never cross the 2+2+3 grouping of 7/8 except the half note.
+function placeSpan(c, gi, m){
+  if (c.id==='wr') return gi===0 ? m.groups.length : 0;
+  let sum=0, n=0;
+  for (let i=gi; i<m.groups.length && sum<c.len; i++){ if ((m.groups[i]===36?'c':'s')!==c.k) return 0; sum+=m.groups[i]; n++; }
+  if (sum!==c.len) return 0;
+  const key = m.num+'/'+m.den;
+  if (n===1) return 1;
+  if (key==='4/4'){ if (n===2) return gi%2===0 ? 2 : 0; if (n===3) return gi===0 ? 3 : 0; return gi===0 ? 4 : 0; }
+  if (key==='12/8') return (n===2 && gi%2===0) ? 2 : 0;
+  if (c.id==='hr') return 0;                                  // half rest only in 4/4
+  if (key==='7/8') return c.id==='h' ? n : 0;
+  return n;                                                   // 2/4, 3/4, 6/8
+}
+function rng(seed){ let a = seed>>>0; return ()=>{ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const isRestCell = c => c.n.every(x=>x.r);
+function fillBar(cells, m, R){
+  const out = [];
+  function go(gi){
+    if (gi===m.groups.length) return true;
+    const opts = cells.filter(c=>placeSpan(c,gi,m));
+    for (let i=opts.length-1;i>0;i--){ const j=Math.floor(R()*(i+1)); [opts[i],opts[j]]=[opts[j],opts[i]]; }
+    for (const c of opts){ out.push(c); if (go(gi + placeSpan(c,gi,m))) return true; out.pop(); }
+    return false;
+  }
+  return go(0) ? out.slice() : null;
+}
+function usableCells(ids, m){ return ids.map(i=>BYID[i]).filter(Boolean).filter(c=>m.groups.some((g,gi)=>placeSpan(c,gi,m))); }
+function makeRhythm(ids, tsKey, seed, opts={}){
+  const m = METERS[tsKey];
+  const cells = usableCells(ids, m);
+  const knockable = cells.filter(c=>!isRestCell(c));
+  if (!ids.some(i=>BYID[i])) return {err:'Select at least one note value.'};
+  if (!knockable.length){
+    if (m.compound) return {err:tsKey+' needs compound patterns. Select at least one under Compound time.'};
+    return {err:'Select at least one note (not only rests) that fits '+tsKey+'.'};
+  }
+  const R = rng(seed);
+  let best=null, bestScore=-1e9;
+  for (let tries=0; tries<160; tries++){
+    const bars=[];
+    for (let b=0;b<4;b++){ const bar = fillBar(cells, m, R); if(!bar) return {err: m.mixed ? '7/8 needs both a simple pattern (such as a quarter note) and a compound pattern (such as a dotted quarter).' : m.compound ? 'These patterns cannot fill a bar of '+tsKey+'. Add a dotted quarter or three eighths.' : 'These notes cannot fill a bar of '+tsKey+'. Add a quarter note.'}; bars.push(bar); }
+    let s = 0;
+    const used = new Set(bars.flat().map(c=>c.id));
+    s += used.size*10;
+    if (bars[0][0].n[0].r) s -= 60;
+    bars.forEach((bar,i)=>{ if (bar.every(isRestCell)) s -= (i===0||i===3)?80:25; });
+    const keys = bars.map(b=>b.map(c=>c.id).join());
+    if (new Set(keys).size===1) s -= 40;
+    for (let i=1;i<4;i++) if (keys[i]===keys[i-1]) s -= 6;
+    if (bars[3].every(isRestCell)) s -= 50;
+    s += R()*4;
+    if (s>bestScore){ bestScore=s; best=bars; }
+    if (used.size===cells.length && tries>30) break;
+  }
+  // ties: join the last note of a beat pattern to the first note of the next pattern (across a beat or a barline)
+  const ties = new Set();
+  if (opts.ties){
+    const flat=[]; best.forEach((bar,bi)=>{ let k=0; bar.forEach(c=>c.n.forEach((x,ni)=>{ flat.push({bi,k:k++,c,x,last:ni===c.n.length-1,first:ni===0}); })); });
+    const cand=[];
+    for (let i=0;i<flat.length-1;i++){ const a=flat[i], b=flat[i+1];
+      if (a.x.r||b.x.r||a.x.tr||b.x.tr||a.c.id==='wr'||b.c.id==='wr'||!a.last||!b.first) continue;
+      cand.push(i); }
+    for (let i=cand.length-1;i>0;i--){ const j=Math.floor(R()*(i+1)); [cand[i],cand[j]]=[cand[j],cand[i]]; }
+    const want = Math.min(cand.length, 1 + Math.floor(R()*3));
+    const picked=new Set();
+    for (const i of cand){ if (picked.size>=want) break; if (picked.has(i-1)||picked.has(i+1)) continue; picked.add(i); }
+    picked.forEach(i=>ties.add(flat[i].bi+':'+flat[i].k));
+  }
+  return {bars:best, ties};
+}
+// note-by-note view of a rhythm: onset tick in bar, knock or not
+function eventsOf(rh){
+  const ev=[]; const tiedTo=new Set();
+  rh.bars.forEach((bar,bi)=>{ let k=0, pos=0; bar.forEach(c=>{ let p=pos; c.n.forEach(x=>{ ev.push({bi,k,p,c,x}); p+=noteTicks(c,x); k++; }); pos += c.id==='wr' ? 0 : c.len; }); });
+  ev.forEach((e,i)=>{ if (rh.ties.has(e.bi+':'+e.k) && ev[i+1]) tiedTo.add(i+1); });
+  ev.forEach((e,i)=>{ e.tied = tiedTo.has(i); e.knock = !e.x.r && !e.tied; });
+  return ev;
+}
+
+// ---------- notation drawing ----------
+const KEY = ['b/4'];
+function buildNotes(cell, color){
+  const notes = cell.n.map(x=>{
+    let dur = x.d + (x.r?'r':'');
+    const opt = {keys:KEY, duration:dur, stem_direction:1, auto_stem:false};
+    if (x.dot) opt.dots = 1;
+    if (cell.id==='wr'){ opt.align_center = true; }
+    const sn = new VF.StaveNote(opt);
+    if (x.dot) VF.Dot.buildAndAttach([sn], {all:true});
+    if (color) sn.setStyle({fillStyle:color, strokeStyle:color});
+    return sn;
+  });
+  const beams = (cell.b||[]).map(ix=>{ const bm = new VF.Beam(ix.map(i=>notes[i])); if(color) bm.setStyle({fillStyle:color,strokeStyle:color}); return bm; });
+  const tuplets = (cell.tg||[]).map(ix=>new VF.Tuplet(ix.map(i=>notes[i]),{num_notes:3,notes_occupied:2,bracketed:!!cell.tb,ratioed:false}));
+  return {notes, beams, tuplets};
+}
+function hideLines(stave, all){ stave.setConfigForLines([0,1,2,3,4].map(i=>({visible:!all && i===2}))); return stave; }
+// draw one bar on its own line. returns note info for labels and ties
+function drawBar(vctx, bar, x, y, w, opts){
+  const st = hideLines(new VF.Stave(x, y, w));
+  st.addClef('percussion'); if (opts.sig) st.addTimeSignature(opts.ts);
+  if (opts.last) st.setEndBarType(VF.Barline.type.END);
+  st.setStyle({strokeStyle:opts.ink, fillStyle:opts.ink});
+  st.setContext(vctx);
+  if (opts.beforeBar) opts.beforeBar(st);
+  st.draw();
+  const all=[], beams=[], tups=[], syl=[];
+  bar.forEach(c=>{ const g=buildNotes(c, opts.ink); all.push(...g.notes); beams.push(...g.beams); tups.push(...g.tuplets); g.notes.forEach((n,k)=>syl.push({n, s:c.syl[k], rest:!!c.n[k].r, cell:c, k})); });
+  const m = METERS[opts.ts];
+  const voice = new VF.Voice({num_beats:m.num, beat_value:m.den}).setMode(VF.Voice.Mode.SOFT);
+  voice.addTickables(all);
+  new VF.Formatter().joinVoices([voice]).format([voice], x+w - st.getNoteStartX() - 24);
+  voice.draw(vctx, st);
+  beams.forEach(b=>b.setContext(vctx).draw());
+  tups.forEach(t=>t.setContext(vctx).draw());
+  return {x0:x, x1:x+w, noteX:st.getNoteStartX(), bar, syl, notes:all};
+}
+function drawTie(vctx, a, b, ink){
+  const t = new VF.StaveTie({first_note:a||undefined, last_note:b||undefined, first_indices:[0], last_indices:[0]});
+  t.setDirection(1); t.setStyle({fillStyle:ink, strokeStyle:ink}); t.setContext(vctx).draw();
+}
+// counting labels for one bar, using the events list (tied notes and rests in brackets)
+function countLabel(e, m){
+  const p = Math.round(e.p);
+  if (m.simple){
+    const beat = ''+(Math.floor(p/24)+1), sub = p%24;
+    if (e.x.tr && e.x.d==='16'){ const q = sub%12, base = sub<12 ? beat : '+'; return q===0 ? base : q===4 ? 'T' : q===8 ? 'L' : ''; }
+    if (e.x.tr) return sub===0 ? beat : sub===8 ? 'T' : sub===16 ? 'L' : '';
+    return ({0:beat,6:'e',12:'+',18:'a'})[sub] || '';
+  }
+  if (e.x.tr) return '';
+  return p%12===0 ? ''+(p/12+1) : p%6===0 ? '+' : '';
+}
+// swing: move onsets inside each quarter beat (8th swing) or each eighth (16th swing) to a 2:1 feel
+function swingPos(p, feel, groupStart){
+  if (!feel || feel==='straight') return p;
+  const unit = feel==='s8' ? 24 : 12;
+  const rel = p - groupStart, base = Math.floor(rel/unit)*unit, f = rel - base, h = unit/2, long = unit*2/3;
+  const mapped = f<=h ? f*(long/h) : long + (f-h)*((unit-long)/h);
+  return groupStart + base + mapped;
+}
+
+// ---------- poster ----------
+const THEMES = {
+  navy:{acc:'#1f3a5f', ink:'#14181f', soft:'#5b6472', rule:'#d5dae2', tint:'#f3f5f8'},
+  gold:{acc:'#a8822e', ink:'#1b1b1b', soft:'#5f5f5f', rule:'#ddd6c6', tint:'#f7f4ee'},
+  burgundy:{acc:'#7a1f2b', ink:'#1b1416', soft:'#655a5c', rule:'#e2d3d5', tint:'#f8f2f3'},
+  forest:{acc:'#1f5c45', ink:'#131a17', soft:'#56635d', rule:'#d2ddd8', tint:'#f1f6f3'},
+  mono:{acc:'#111111', ink:'#111111', soft:'#555555', rule:'#cccccc', tint:'#ffffff'}
+};
+const PAPERS = {a4p:[210,297],a4l:[297,210],ltp:[215.9,279.4],ltl:[279.4,215.9]};
+const DPI_MM = 200/25.4;
+const SANS = 'Inter, "Helvetica Neue", Arial, sans-serif', SERIF = '"Playfair Display", Georgia, serif';
+function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.roundRect(x,y,w,h,r); }
+function fitText(ctx, text, maxW, size, weight, fam){ let s=size; do { ctx.font = weight+' '+s+'px '+(fam||SANS); s-=1; } while (ctx.measureText(text).width>maxW && s>10); return s+1; }
+function wrapText(ctx, text, maxW, size, weight, maxLines){
+  const words = (text||'').split(/\s+/).filter(Boolean); let lines;
+  for (;;){
+    ctx.font = weight+' '+size+'px '+SANS; lines=[''];
+    for (const w of words){ const L=lines[lines.length-1]; const t = L ? L+' '+w : w; if (!L || ctx.measureText(t).width<=maxW) lines[lines.length-1]=t; else lines.push(w); }
+    if ((lines.length<=maxLines && lines.every(l=>ctx.measureText(l).width<=maxW)) || size<=14) return {lines:lines.slice(0,maxLines), size};
+    size -= 1;
+  }
+}
+// "Swing  (two eighths) = (quarter + eighth under a triplet)" marking, the standard way swing is written
+function drawSwingMark(vctx, ctx, x, y, s, feel, ink){
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.fillStyle=ink; ctx.strokeStyle=ink;
+  ctx.font = '700 17px '+SANS; ctx.textBaseline='alphabetic'; ctx.textAlign='left';
+  ctx.fillText(feel==='s8' ? 'Swing' : 'Swing 16ths', 0, 0);
+  const tw = ctx.measureText(feel==='s8' ? 'Swing' : 'Swing 16ths').width + 12;
+  const d = feel==='s8' ? ['8','q','8'] : ['16','8','16'];
+  const mk = (dur)=>{ const n = new VF.StaveNote({keys:KEY, duration:dur, stem_direction:1, auto_stem:false}); n.setStyle({fillStyle:ink,strokeStyle:ink}); return n; };
+  const draw = (notes, x0, w, beamIt, tup)=>{
+    const stv = hideLines(new VF.Stave(x0, -70, w), true); stv.setBegBarType(VF.Barline.type.NONE); stv.setEndBarType(VF.Barline.type.NONE); stv.setContext(vctx);
+    const v = new VF.Voice({num_beats:4, beat_value:4}).setMode(VF.Voice.Mode.SOFT); v.addTickables(notes);
+    const beams = beamIt ? [new VF.Beam(notes)] : [];
+    const tups = tup ? [new VF.Tuplet(notes,{num_notes:3,notes_occupied:2,bracketed:true})] : [];
+    new VF.Formatter().joinVoices([v]).format([v], w-20); v.draw(vctx, stv);
+    beams.forEach(b=>{ b.setStyle({fillStyle:ink,strokeStyle:ink}); b.setContext(vctx).draw(); }); tups.forEach(t=>t.setContext(vctx).draw());
+  };
+  ctx.save(); ctx.scale(0.62,0.62);
+  const x1 = tw/0.62;
+  draw([mk(d[0]), mk(d[0])], x1, 70, true, false);
+  ctx.font = '400 30px '+SANS; ctx.fillText('=', x1+64, -10);
+  if (feel==='s8') draw([mk('q'), mk('8')], x1+92, 80, false, true);
+  else draw([mk('8'), mk('16')], x1+92, 80, true, true);
+  ctx.restore(); ctx.restore();
+}
+function drawPoster(canvas, R, st){
+  const [mw,mh] = PAPERS[st.paper];
+  const W = Math.round(mw*DPI_MM), H = Math.round(mh*DPI_MM);
+  canvas.width=W; canvas.height=H;
+  const land = W>H;
+  canvas.classList.toggle('land', land);
+  canvas.style.aspectRatio = mw+'/'+mh;
+  const ctx = canvas.getContext('2d');
+  const th = THEMES[st.themeKey] || THEMES.navy;
+  ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,W,H);
+  const M = Math.round(Math.min(W,H)*0.075);
+  // accent band along the top edge
+  ctx.fillStyle = th.acc; ctx.fillRect(0,0,W,Math.round(H*0.012));
+  const X = M, CW = W-2*M;
+  let y = M + H*0.01;
+  const u = Math.min(W,H)/1654;            // 1 at A4 portrait width
+  ctx.textBaseline='alphabetic'; ctx.textAlign='left';
+  // studio line
+  if (st.room){ ctx.fillStyle=th.acc; fitText(ctx, st.room, CW, Math.round(34*u), 600); ctx.fillText(st.room, X, y+34*u); y += 34*u + 30*u; }
+  // title
+  ctx.fillStyle=th.ink; const ts = fitText(ctx, st.title, CW, Math.round((land?118:124)*u), 700, SERIF);
+  y += ts*0.92; ctx.fillText(st.title, X, y);
+  ctx.fillStyle=th.soft; fitText(ctx, 'Knock this rhythm on the door before you enter.', CW, Math.round(40*u), 400);
+  y += 40*u + 26*u; ctx.fillText('Knock this rhythm on the door before you enter.', X, y);
+  y += 44*u;
+  ctx.fillStyle=th.acc; ctx.fillRect(X, y, CW, Math.max(3, 4*u)); y += 4*u;
+  // bottom block sizes
+  const fs = Math.round((land?38:44)*u);
+  const infoH = fs*9.2;
+  const footY = H - M*0.62;
+  const infoY = footY - fs*1.2 - infoH;
+  // rhythm area: always one bar per line, four lines
+  const m = METERS[st.ts];
+  const unitsH = st.syl==='count' ? 158 : 124;
+  const gap = 34*u;
+  const swingH = st.feel && st.feel!=='straight' ? 70*u : 0;
+  const top = y + 36*u + swingH, rhythmH = infoY - 36*u - top;
+  const needW = b => 110 + b.reduce((x,c)=>x + c.n.reduce((z,n)=>z+(n.d==='32'?22:n.d==='16'?26:n.d==='8'?30:36),0),0);
+  const sw = Math.min(...st.bars.map(b=>CW/needW(b)));
+  const sh = (rhythmH - gap*3) / 4 / unitsH;
+  const scale = Math.min(sw, sh, 3.0*u), rowH = unitsH*scale;
+  const ry = top + (rhythmH - 4*rowH - gap*3)/2;
+  const vctx = new VF.CanvasContext(ctx);
+  const ev = eventsOf(st);
+  if (swingH) drawSwingMark(vctx, ctx, X, ry - swingH*0.25, Math.min(scale*1.25, 2.8*u), st.feel, th.ink);
+  ctx.save(); ctx.fillStyle = th.ink; ctx.strokeStyle = th.ink;
+  const infos=[];
+  st.bars.forEach((bar, ri)=>{
+    const rowY = ry + ri*(rowH+gap);
+    ctx.save(); ctx.translate(X, rowY); ctx.scale(scale, scale);
+    const info = drawBar(vctx, bar, 0, 22, CW/scale - 2, {ts:st.ts, sig:ri===0, last:ri===3, ink:th.ink,
+      beforeBar:(stv)=>{
+        if (ri===0) return;   // engraving convention: no number on bar 1
+        ctx.save(); ctx.fillStyle = th.soft; ctx.font='600 11px '+SANS; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+        ctx.fillText(String(ri+1), stv.getX()+3, 44); ctx.restore();
+      }});
+    infos.push(info);
+    // ties inside this line, and the halves of ties that cross into or out of it
+    ev.forEach((e,i)=>{
+      if (e.bi!==ri) return;
+      if (st.ties.has(e.bi+':'+e.k)){ const nx = ev[i+1]; if (nx.bi===ri) drawTie(vctx, info.notes[e.k], info.notes[nx.k], th.ink); else drawTie(vctx, info.notes[e.k], null, th.ink); }
+      if (e.tied && ev[i-1].bi!==ri) drawTie(vctx, null, info.notes[e.k], th.ink);
+    });
+    if (st.syl==='count'){
+      ev.filter(e=>e.bi===ri).forEach(e=>{
+        const o = info.syl[e.k];
+        let s = countLabel(e, m);
+        if (e.c.id==='wr') s = '';
+        if (!s) return;
+        if (!e.knock) s = '('+s+')';
+        const n=o.n; const x = n.getAbsoluteX() + n.getGlyphWidth()/2;
+        ctx.save(); ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+        ctx.fillStyle = e.knock ? th.soft : '#a0a5ad';
+        ctx.font = '600 '+(s.length>5?12:13)+'px '+SANS;
+        ctx.fillText(s, x, 140);
+        ctx.restore();
+      });
+    }
+    ctx.restore();
+  });
+  ctx.restore();
+  // info block: two columns separated by a hairline
+  ctx.fillStyle = th.rule; ctx.fillRect(X, infoY, CW, Math.max(2,2*u));
+  const colGap = 60*u, c1 = X, c1w = CW*0.5 - colGap/2, c2 = X + CW*0.5 + colGap/2, c2w = CW*0.5 - colGap/2;
+  ctx.fillRect(X + CW*0.5, infoY + fs*1.2, Math.max(2,2*u), infoH - fs*1.6);
+  let ly = infoY + fs*2.1;
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  ctx.fillStyle = th.acc; ctx.font = '700 '+Math.round(fs*0.8)+'px '+SANS; ctx.fillText('How to enter', c1, ly);
+  ly += fs*1.45;
+  // steps share one text size; a long step wraps onto a second line instead of shrinking
+  const steps = ['Figure out the rhythm.','Knock the rhythm on the door at a tempo of your choice.','Wait for the teacher\'s response.'];
+  const stepW = c1w - fs*1.3;
+  const stepSize = Math.min(...steps.map(t=>wrapText(ctx, t, stepW, Math.round(fs*0.9), 400, 2).size));
+  steps.forEach((t,i)=>{
+    const w = wrapText(ctx, t, stepW, stepSize, 400, 2);
+    ctx.fillStyle = th.acc; ctx.font = '700 '+fs+'px '+SERIF; ctx.fillText(String(i+1), c1, ly);
+    ctx.fillStyle = th.ink; ctx.font = '400 '+stepSize+'px '+SANS;
+    w.lines.forEach((l,j)=>ctx.fillText(l, c1 + fs*1.3, ly + j*stepSize*1.3));
+    ly += (w.lines.length-1)*stepSize*1.3 + fs*1.5;
+  });
+  let ry2 = infoY + fs*2.1;
+  ctx.fillStyle = th.acc; ctx.font = '700 '+Math.round(fs*0.8)+'px '+SANS; ctx.fillText('You have three attempts', c2, ry2);
+  ry2 += fs*1.0;
+  const r = fs*0.62; let kx = c2 + r;
+  const ky = ry2 + r;
+  for (let i=0;i<3;i++){
+    ctx.strokeStyle = th.ink; ctx.lineWidth = Math.max(2, 3*u);
+    ctx.beginPath(); ctx.arc(kx, ky, r, 0, Math.PI*2); ctx.stroke();
+    ctx.fillStyle = th.ink; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font = '600 '+Math.round(fs*0.72)+'px '+SANS; ctx.fillText(String(i+1), kx, ky+1);
+    kx += r*2.7;
+  }
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  ry2 = ky + r + fs*1.25;
+  ctx.fillStyle = th.acc; fitText(ctx, 'After 3 incorrect attempts', c2w, fs, 700); ctx.fillText('After 3 incorrect attempts', c2, ry2);
+  const wr = wrapText(ctx, st.penalty, c2w, Math.round(fs*0.88), 400, 2);
+  ctx.fillStyle = th.ink; ctx.font = '400 '+wr.size+'px '+SANS;
+  wr.lines.forEach((l,i)=>ctx.fillText(l, c2, ry2 + fs*1.2 + i*wr.size*1.3));
+  // footer
+  ctx.fillStyle = th.rule; ctx.fillRect(X, footY - fs*0.95, CW, Math.max(1,1.5*u));
+  ctx.fillStyle = th.soft; ctx.font = '400 '+Math.round(26*u)+'px '+SANS; ctx.textAlign='left';
+  ctx.fillText('Password No. '+st.seed+'   ·   '+st.ts+' time'+(st.feel==='s8'?'   ·   swing 8ths':st.feel==='s16'?'   ·   swing 16ths':''), X, footY);
+}
+
+// ---------- UI ----------
+const $ = id => document.getElementById(id);
+const canvas = $('poster');
+function miniSVG(cell){
+  const div = document.createElement('div');
+  const W = cell.n.length>5 ? 160 : 120;
+  const r = new VF.Renderer(div, VF.Renderer.Backends.SVG); r.resize(W,72);
+  const c = r.getContext(); c.scale(1,1);
+  const st = hideLines(new VF.Stave(0,-2,W)); st.setBegBarType(VF.Barline.type.NONE); st.setEndBarType(VF.Barline.type.NONE); st.setContext(c).draw();
+  const g = buildNotes(cell, null);
+  const v = new VF.Voice({num_beats:4,beat_value:4}).setMode(VF.Voice.Mode.SOFT); v.addTickables(g.notes);
+  new VF.Formatter().joinVoices([v]).format([v], W - st.getNoteStartX() - 14);
+  v.draw(c, st); g.beams.forEach(b=>b.setContext(c).draw()); g.tuplets.forEach(t=>t.setContext(c).draw());
+  const svg = div.querySelector('svg'); svg.setAttribute('viewBox','0 0 '+W+' 72'); svg.removeAttribute('width'); svg.removeAttribute('height');
+  svg.style.width='';svg.style.height='';svg.setAttribute('fill','currentColor');svg.setAttribute('stroke','currentColor'); svg.querySelectorAll('[fill="black"],[fill="#000"]').forEach(e=>e.setAttribute('fill','currentColor'));
+  svg.querySelectorAll('[stroke="black"],[stroke="#000"]').forEach(e=>e.setAttribute('stroke','currentColor'));
+  return svg;
+}
+function tieSVG(){
+  const div = document.createElement('div'); const W=120;
+  const r = new VF.Renderer(div, VF.Renderer.Backends.SVG); r.resize(W,72); const c = r.getContext();
+  const st = hideLines(new VF.Stave(0,-2,W)); st.setBegBarType(VF.Barline.type.NONE); st.setEndBarType(VF.Barline.type.NONE); st.setContext(c).draw();
+  const ns = [new VF.StaveNote({keys:KEY,duration:'q',stem_direction:1,auto_stem:false}), new VF.StaveNote({keys:KEY,duration:'8',stem_direction:1,auto_stem:false})];
+  const v = new VF.Voice({num_beats:4,beat_value:4}).setMode(VF.Voice.Mode.SOFT); v.addTickables(ns);
+  new VF.Formatter().joinVoices([v]).format([v], W - st.getNoteStartX() - 24); v.draw(c, st);
+  const t = new VF.StaveTie({first_note:ns[0], last_note:ns[1], first_indices:[0], last_indices:[0]}); t.setDirection(1); t.setContext(c).draw();
+  const svg = div.querySelector('svg'); svg.setAttribute('viewBox','0 0 '+W+' 72'); svg.removeAttribute('width'); svg.removeAttribute('height'); svg.style.width=''; svg.style.height='';
+  svg.setAttribute('fill','currentColor'); svg.setAttribute('stroke','currentColor'); return svg;
+}
+[...CELLS, {id:'tie', g:'tTies', name:'Use ties (across beats and barlines)', svg:tieSVG}].forEach(c=>{
+  const lab = document.createElement('label'); lab.className='tile';
+  const inp = document.createElement('input'); inp.type='checkbox'; inp.value=c.id; inp.id='c_'+c.id; inp.setAttribute('aria-label', c.name);
+  lab.append(inp);
+  try { lab.append(c.svg ? c.svg() : miniSVG(c)); } catch(e){ console.error(e); }
+  const sp = document.createElement('span'); sp.textContent = c.name; lab.append(sp);
+  $(c.g).append(lab);
+});
+const store = { get(k){ try{return JSON.parse(localStorage.getItem('knock_'+k));}catch(e){return null;} }, set(k,v){ try{localStorage.setItem('knock_'+k, JSON.stringify(v));}catch(e){} } };
+function setChecked(ids){ document.querySelectorAll('.tile input').forEach(i=>i.checked = ids.includes(i.value)); }
+function getChecked(){ return [...document.querySelectorAll('.tile input:checked')].map(i=>i.value); }
+const PENALTIES = [
+  ['Practise it right away',['Clap the password 3 times with me, then knock again','Say the password in ta ti-ti, then knock again','Knock it slowly with me, then on your own','Tap the beat on your knees while I knock it','Point to each note on the poster as you count it']],
+  ['Extra lesson work',['5 minutes of extra rhythm practice at the start of the lesson','2 extra minutes of rhythm practice at the start of the lesson','Start the lesson with 5 echo rhythms','Sight-read one new rhythm card before we begin','Write the password from memory at the end of the lesson','Learn this rhythm as homework and knock it next week']],
+  ['Fun but useful',['Make up your own 4 beat rhythm and teach it to me','Knock the password with your other hand','Knock it while you count out loud','Play the password on your instrument first','Sing the password on "la", then knock it']],
+  ['Gentle, for young students',['Take a deep breath, count 1 2 3 4, and try again','Knock it together with me, then try alone','Give me a high five and start fresh']]
+];
+const ALL_PEN = PENALTIES.flatMap(g=>g[1]);
+$('penSel').innerHTML = '<option value="surprise">Surprise me (different on each poster)</option>' + PENALTIES.map(g=>'<optgroup label="'+g[0]+'">'+g[1].map(p=>'<option value="'+ALL_PEN.indexOf(p)+'">'+p.replace(/"/g,'&quot;')+'</option>').join('')+'</optgroup>').join('') + '<option value="own">Write my own</option>';
+function penaltyText(seed){ const v=$('penSel').value; if (v==='own') return $('penalty').value.trim(); if (v==='surprise') return ALL_PEN[rng(seed*13+5)()*ALL_PEN.length|0]; return ALL_PEN[+v]; }
+const saved = store.get('settings');
+setChecked(saved?.ids || PRESETS.easy);
+['ts','paper','theme','syl','title','penalty','room','penSel'].forEach(k=>{ if (saved && saved[k]!=null) $(k).value = saved[k]; });
+if (!THEMES[$('theme').value]) $('theme').value='mono';
+if (!$('penSel').value || !saved || saved.v<3){ $('penSel').value = String(ALL_PEN.indexOf('5 minutes of extra rhythm practice at the start of the lesson')); }
+if (!saved || saved.v<3){ $('title').value='Rhythm Password'; $('theme').value='mono'; }
+if (!saved || saved.v<4){ $('syl').value='count'; }
+if ($('syl').value!=='count' && $('syl').value!=='none') $('syl').value='count';
+if (!METERS[$('ts').value]) $('ts').value='4/4';
+if (saved && saved.feel) $('feel').value = saved.feel;
+function syncFeel(){ const simple = METERS[$('ts').value].simple; $('feel').disabled = !simple; if (!simple) $('feel').value='straight'; }
+syncFeel();
+$('penOwnRow').hidden = $('penSel').value!=='own';
+let cur = null;
+function settings(){ return {v:4, feel:$('feel').value, ids:getChecked(), ts:$('ts').value, paper:$('paper').value, theme:$('theme').value, syl:$('syl').value, title:$('title').value, penalty:$('penalty').value, penSel:$('penSel').value, room:$('room').value}; }
+function status(msg, err){ $('status').textContent = msg; $('status').className = err?'err':''; }
+function build(seed){
+  const s = settings(); store.set('settings', s);
+  const ids = s.ids.filter(i=>i!=='tie');
+  const res = makeRhythm(ids, s.ts, seed, {ties:s.ids.includes('tie')});
+  if (res.err){ status(res.err, true); return false; }
+  cur = {seed, ts:s.ts, feel:s.feel, bars:res.bars, ties:res.ties, themeKey:s.theme, paper:s.paper, syl:s.syl, title:s.title.trim()||'Rhythm Password', penalty:penaltyText(seed), room:s.room.trim()};
+  redraw();
+  $('codeOut').textContent = seed;
+  status('');
+  return true;
+}
+function redraw(){ if (!cur) return; drawPoster(canvas, null, cur); }
+function newSeed(){ return 1000 + Math.floor(Math.random()*9000); }
+$('gen').addEventListener('click', ()=>{ build(newSeed()); });
+$('loadCode').addEventListener('click', ()=>{ const v = +$('codeIn').value; if (v>=1000 && v<=9999){ build(v); } else status('Type a password number from 1000 to 9999.', true); });
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click', ()=>{ setChecked(PRESETS[b.dataset.preset]); build(cur?cur.seed:newSeed()); }));
+document.querySelectorAll('.tile input').forEach(i=>i.addEventListener('change', ()=>{ if (getChecked().filter(v=>v!=='tie').length) build(cur?cur.seed:newSeed()); else status('Select at least one note value.', true); }));
+['ts','paper','theme','syl','feel'].forEach(k=>$(k).addEventListener('change', ()=>{ if (k==='ts') syncFeel(); build(cur?cur.seed:newSeed()); }));
+['title','penalty','room'].forEach(k=>$(k).addEventListener('input', ()=>{ if(!cur) return; const s=settings(); store.set('settings', s); cur.title=s.title.trim()||'Rhythm Password'; cur.penalty=penaltyText(cur.seed); cur.room=s.room.trim(); redraw(); }));
+$('penSel').addEventListener('change', ()=>{ $('penOwnRow').hidden = $('penSel').value!=='own'; if ($('penSel').value==='own') $('penalty').focus(); store.set('settings', settings()); if (cur){ cur.penalty=penaltyText(cur.seed); redraw(); } });
+
+// ---------- PDF ----------
+let downloads = null;
+if (window.claude && claude.use) claude.use('downloads').then(d=>{ downloads = d; }).catch(()=>{});
+function makePdfBlob(){
+  const [mw,mh] = PAPERS[cur.paper];
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation: mw>mh?'landscape':'portrait', unit:'mm', format:[mw,mh], compress:true});
+  doc.setProperties({title: cur.title + ' (password ' + cur.seed + ')'});
+  doc.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, mw, mh, undefined, 'FAST');
+  return doc.output('blob');
+}
+$('pdf').addEventListener('click', async ()=>{
+  if (!cur) return;
+  const name = 'rhythm-password-' + cur.seed + '.pdf';
+  const blob = makePdfBlob();
+  if (downloads){
+    try { await downloads.save({filename:name, data:blob}); status('Saved '+name+'. Print it at 100% size.'); }
+    catch(e){ if (e && e.code==='declined') status('Download cancelled.'); else if (e && e.code==='rate_limited') status('One moment, then press Download PDF again.'); else status('This view cannot save files. Open the page in a web browser on a computer to download.', true); }
+    return;
+  }
+  if (window.claude){ status('Downloads are getting ready. Press Download PDF again in a moment.'); return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  status('Saved '+name+'. Print it at 100% size.');
+});
+
+Promise.all(['400 40px Inter','600 40px Inter','700 40px Inter','700 40px "Playfair Display"'].map(f=>document.fonts.load(f))).catch(()=>{}).then(()=>{ build(newSeed()); });
+window.__knock = {noteTicks, buildNotes, placeSpan, METERS, eventsOf, swingPos, countLabel, drawPoster, VF, makeRhythm, CELLS, PRESETS, build, get cur(){return cur;}, makePdfBlob};
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "name": "knocklock",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Rhythm password posters for a music studio door",
+  "scripts": { "build": "python3 build.py" },
+  "devDependencies": { "jspdf": "4.2.1", "vexflow": "4.2.5" }
+}
