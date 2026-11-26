@@ -32,7 +32,7 @@ html{scroll-snap-type:y proximity;scroll-behavior:smooth}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 Inter,"Helvetica Neue",Arial,sans-serif}
 a{color:var(--acc)}
-.bar{position:fixed;inset:0 0 auto 0;z-index:5;display:flex;align-items:center;gap:12px;padding:12px max(4vw,16px);background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar{position:fixed;inset:0 0 auto 0;z-index:5;display:flex;align-items:center;gap:12px;padding:12px max(4vw,16px);background:var(--bg);background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .bar .home{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:700}
 .bar .home img{width:30px;height:30px}
 .bar .open{margin-left:auto;background:var(--acc);color:light-dark(#fff,#0f1115);text-decoration:none;font-weight:600;font-size:15px;border-radius:8px;padding:9px 16px}
@@ -97,6 +97,9 @@ footer{scroll-snap-align:end;padding:24px max(5vw,18px) 40px;color:var(--soft);f
   .pic img{max-height:576px;width:auto;max-width:100%;margin:0 auto}
   .pic.tall{max-width:380px}
 }
+
+/* older Safari: light-dark() fallback */
+@supports not (color:light-dark(#000,#fff)){:root{--bg:#f4f5f7;--card:#ffffff;--ink:#14181f;--soft:#5b6472;--line:#dfe3e9;--acc:#1f3a5f;--accbg:#eaf0f7}.bar .open{color:#fff}.cta .primary{color:#fff}@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1115;--card:#171a20;--ink:#e9ecf1;--soft:#9aa3b2;--line:#2a2f39;--acc:#8fb0dc;--accbg:#1d2a3c}:root:not([data-theme=light]) .bar .open{color:#0f1115}:root:not([data-theme=light]) .cta .primary{color:#0f1115}}:root[data-theme=dark]{--bg:#0f1115;--card:#171a20;--ink:#e9ecf1;--soft:#9aa3b2;--line:#2a2f39;--acc:#8fb0dc;--accbg:#1d2a3c}:root[data-theme=dark] .bar .open{color:#0f1115}:root[data-theme=dark] .cta .primary{color:#0f1115}}
 </style>
 </head>
 <body>
